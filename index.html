@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>西青产业通・区域产业内循环赋能平台 | 增强商业版</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], } } } }
+    </script>
+    <!-- 第三方依赖库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.3/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+    
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .highlight { background-color: #fef08a; font-weight: bold; padding: 0 2px; border-radius: 2px; color: #b45309; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+        .ai-btn-gradient { background: linear-gradient(110deg, #4f46e5 20%, #a855f7 40%, #a855f7 60%, #4f46e5 80%); background-size: 200% auto; color: white; animation: shimmer 3s linear infinite; transition: transform 0.2s, box-shadow 0.2s; }
+        .ai-btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 12px 20px -10px rgba(79, 70, 229, 0.5); }
+        .badge-core { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+
+        .markdown-body h3 { font-size: 1.125rem; font-weight: 700; color: #1e293b; margin-top: 1.2rem; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem;}
+        .markdown-body p { margin-bottom: 0.75rem; color: #475569; font-size: 0.95rem; line-height: 1.6; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; color: #475569; font-size: 0.95rem; }
+        .markdown-body li { margin-bottom: 0.25rem; }
+        .markdown-body strong { color: #0f172a; font-weight: 600; }
+        
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast-enter { animation: slideDown 0.3s ease-out forwards; }
+
+        .follow-up-area { border-top: 1px solid #e2e8f0; background-color: rgba(248, 250, 252, 0.8); backdrop-filter: blur(4px); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+        .follow-up-input-area { display: flex; gap: 0.5rem; }
+        .follow-up-input { flex: 1; padding: 0.5rem 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-size: 0.9rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .follow-up-input:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
+        .follow-up-btn { background-color: #4f46e5; color: white; padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 500; transition: background-color 0.2s, transform 0.2s; white-space: nowrap; }
+        .follow-up-btn:hover { background-color: #4338ca; transform: translateY(-1px); }
+        .follow-up-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .suggestion-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .suggestion-btn { background-color: #e0e7ff; color: #4f46e5; padding: 0.3rem 1rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 500; transition: all 0.2s; border: 1px solid #c7d2fe; }
+        .suggestion-btn:hover { background-color: #c7d2fe; transform: translateY(-1px); }
+
+        .cyber-core-container { position: relative; width: 140px; height: 140px; margin: 0 auto; display: flex; justify-content: center; align-items: center; }
+        .cyber-ring { position: absolute; border-radius: 50%; border: 2px solid transparent; }
+        .cyber-ring.outer { width: 100%; height: 100%; border-top: 2px solid #6366f1; border-bottom: 2px solid #a855f7; animation: spin-slow 4s linear infinite; box-shadow: 0 0 15px rgba(99, 102, 241, 0.3) inset; }
+        .cyber-ring.middle { width: 75%; height: 75%; border-left: 2px solid #8b5cf6; border-right: 2px solid #ec4899; animation: spin-reverse 3s linear infinite; border-style: dashed; }
+        .cyber-ring.inner { width: 50%; height: 50%; border-top: 2px solid #3b82f6; border-bottom: 2px solid #6366f1; animation: spin-fast 1.5s linear infinite; }
+        .cyber-orb { width: 25%; height: 25%; background: radial-gradient(circle, #ffffff 0%, #818cf8 40%, #4f46e5 100%); border-radius: 50%; box-shadow: 0 0 20px #6366f1, 0 0 40px #a855f7; animation: pulse-orb 1.5s ease-in-out infinite alternate; z-index: 10; }
+        .floating-kw { position: absolute; font-size: 0.75rem; font-weight: 600; color: #6366f1; background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(99, 102, 241, 0.3); padding: 2px 8px; border-radius: 9999px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); white-space: nowrap; pointer-events: none; z-index: 20; }
+        @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+        @keyframes spin-fast { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse-orb { 0% { transform: scale(0.85); box-shadow: 0 0 15px #6366f1; } 100% { transform: scale(1.15); box-shadow: 0 0 35px #818cf8, 0 0 60px #a855f7; } }
+        .data-stream { font-family: 'Courier New', Courier, monospace; letter-spacing: 1px; color: #6366f1; }
+        .elapsed-time-badge { background-color: #e0e7ff; color: #4f46e5; font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; margin-left: 1rem; font-weight: 500; border: 1px solid #c7d2fe; }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800 font-sans min-h-screen flex flex-col relative">
+
+    <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- 头部导航 -->
+    <header class="bg-gradient-to-r from-indigo-950 via-indigo-900 to-purple-900 text-white shadow-xl sticky top-0 z-50 border-b border-indigo-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-16 h-10 sm:w-20 sm:h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center font-black text-sm sm:text-base shadow-inner relative overflow-hidden shrink-0 border border-white/20 cursor-pointer select-none hover:bg-white/20 transition-colors" onclick="XiqingApp.UI.handleLogoClick()" title="连续点击5次唤醒隐藏配置">
+                        <span class="relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-blue-200 to-purple-300 tracking-widest">XEDA</span>
+                        <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500/40 to-transparent"></div>
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <h1 class="text-base sm:text-xl font-extrabold tracking-wide flex items-center flex-wrap gap-2 leading-tight">
+                            西青产业通
+                            <span class="bg-indigo-500/30 text-indigo-100 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full border border-indigo-400/40 backdrop-blur-sm mt-1 sm:mt-0">生态架构版 v6.0</span>
+                        </h1>
+                        <p class="text-[10px] sm:text-xs text-indigo-200/80 mt-0.5 sm:mt-1 font-medium tracking-wider">以智促融强产业，以链循环兴西青</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 pt-1 md:pb-0 md:pt-0">
+                <input type="file" id="importDocx" accept=".docx" class="hidden" onchange="XiqingApp.handleWordImport(event)">
+                <button onclick="document.getElementById('importDocx').click()" class="shrink-0 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-white/5 hover:bg-white/15 text-indigo-50 rounded-lg text-xs sm:text-sm font-medium transition-all border border-white/10 flex items-center gap-1.5 backdrop-blur-sm shadow-sm hover:shadow">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    导入通鉴
+                </button>
+                
+                <input type="file" id="importExcel" accept=".xlsx, .xls, .csv" class="hidden" onchange="XiqingApp.handleExcelImport(event)">
+                <button onclick="document.getElementById('importExcel').click()" class="shrink-0 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-white/5 hover:bg-white/15 text-indigo-50 rounded-lg text-xs sm:text-sm font-medium transition-all border border-white/10 flex items-center gap-1.5 backdrop-blur-sm shadow-sm hover:shadow">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    导入台账
+                </button>
+
+                <button onclick="XiqingApp.UI.showHistoryModal()" class="shrink-0 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-white/5 hover:bg-white/15 text-indigo-50 rounded-lg text-xs sm:text-sm font-medium transition-all border border-white/10 flex items-center gap-1.5 backdrop-blur-sm shadow-sm hover:shadow">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                    沉淀库
+                </button>
+
+                <button onclick="XiqingApp.UI.showApiKeyModal()" class="shrink-0 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-white/5 hover:bg-white/15 text-indigo-50 rounded-lg text-xs sm:text-sm font-medium transition-all border border-white/10 flex items-center gap-1.5 backdrop-blur-sm shadow-sm hover:shadow">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    API Key
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 搜索区 -->
+    <div class="bg-gradient-to-b from-indigo-900 to-indigo-950 pb-20 sm:pb-28 pt-6 sm:pt-8 shadow-inner relative overflow-hidden">
+        <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 32px 32px;"></div>
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="bg-white/10 backdrop-blur-xl p-2 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col md:flex-row items-stretch md:items-center border border-white/20 gap-2 sm:gap-3">
+                <div class="pl-4 pr-2 text-indigo-300/60 hidden md:block">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <textarea id="searchInput" rows="2" class="w-full px-4 py-3 text-sm sm:text-base focus:outline-none text-white bg-transparent placeholder-indigo-200/50 resize-none md:h-14 font-medium" placeholder="输入产业或企业需求，如 '低空经济，寻找碳纤维和传感器配套...'" onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); XiqingApp.handleSearch(); }"></textarea>
+                
+                <div class="flex flex-row md:flex-col lg:flex-row gap-2 w-full md:w-auto px-2 pb-2 md:p-0 shrink-0">
+                    <button onclick="XiqingApp.handleSearch()" class="flex-1 md:flex-none bg-white/10 hover:bg-white/20 text-indigo-100 px-4 sm:px-6 py-3 rounded-xl font-semibold transition-colors text-sm sm:text-md whitespace-nowrap border border-white/20 backdrop-blur-sm">
+                        精准扫库
+                    </button>
+                    <button onclick="XiqingApp.handleTriggerAI()" class="flex-1 md:flex-none ai-btn-gradient px-4 sm:px-6 py-3 rounded-xl font-bold text-sm sm:text-md whitespace-nowrap shadow-lg flex items-center justify-center gap-1.5 sm:gap-2">
+                        ✨ 生态架构演算
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-4 sm:mt-6 justify-center sm:justify-start lg:justify-center" id="categoryFilters">
+                <!-- 由 JS 动态渲染分类按钮 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full -mt-6 sm:-mt-8 relative z-20">
+        <div class="flex justify-between items-end mb-4 sm:mb-6 px-1 sm:px-2">
+            <h2 class="text-base sm:text-lg font-extrabold text-slate-800 flex items-center gap-2">
+                <span class="w-1.5 sm:w-2 h-5 sm:h-6 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-full shadow-sm"></span>
+                资源匹配档案
+                <span id="resultCount" class="text-xs sm:text-sm font-medium text-slate-500 ml-1 sm:ml-2 bg-slate-200/50 px-2 py-0.5 rounded-md">加载中...</span>
+            </h2>
+            <button onclick="XiqingApp.handleClearData()" class="text-[10px] sm:text-xs text-slate-400 hover:text-red-500 transition-colors underline font-medium">清空并重置库</button>
+        </div>
+        <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
+    </main>
+
+    <!-- 弹窗集群 -->
+    <!-- AI 推演模态框 -->
+    <div id="aiMatchModal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-[60] backdrop-blur-md p-2 sm:p-4">
+        <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden border border-indigo-200/50">
+            <div class="bg-gradient-to-r from-slate-50 to-indigo-50/50 p-4 sm:p-5 border-b border-indigo-100 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="p-1.5 sm:p-2 bg-indigo-600 rounded-lg text-white shadow-md shrink-0"><svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+                    <div class="min-w-0">
+                        <h3 class="text-base sm:text-xl font-bold text-slate-900 flex items-center flex-wrap gap-2">
+                            产业全息推演方案
+                            <span id="elapsedTimeBadge" class="elapsed-time-badge hidden whitespace-nowrap shadow-sm">⏱️ 0.0s</span>
+                            <span id="draftBadge" class="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded border border-amber-200 hidden ml-2">断点恢复中</span>
+                        </h3>
+                    </div>
+                </div>
+                <button onclick="XiqingApp.UI.closeModal('aiMatchModal')" class="text-slate-400 hover:text-slate-600 bg-white shadow-sm rounded-full p-1.5 sm:p-2 border border-slate-200 transition-colors shrink-0 ml-2"><svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-4 sm:p-8 overflow-y-auto flex-1 relative bg-white" id="aiMatchContent">
+                <div id="aiMatchLoading" class="flex flex-col items-center justify-center py-10 sm:py-16 relative">
+                    <div id="floating-keywords" class="absolute inset-0 overflow-hidden pointer-events-none z-0 flex justify-center items-center"></div>
+                    <div class="cyber-core-container z-10"><div class="cyber-ring outer"></div><div class="cyber-ring middle"></div><div class="cyber-ring inner"></div><div class="cyber-orb"></div></div>
+                    <div class="mt-10 text-center z-10 bg-white/80 px-6 py-3 rounded-2xl backdrop-blur-sm border border-slate-100">
+                        <h4 class="text-base sm:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 tracking-[0.2em] mb-2 animate-pulse">ECOSYSTEM ENGINE ACTIVE</h4>
+                        <p id="loadingStageText" class="text-sm text-slate-600 font-bold mb-2">全息产业链图谱拆解中...</p>
+                        <div id="hex-stream" class="text-xs sm:text-sm data-stream opacity-90 h-5 overflow-hidden font-bold"></div>
+                    </div>
+                </div>
+                <div id="aiMatchResult" class="markdown-body hidden text-sm sm:text-base"></div>
+            </div>
+            <div class="border-t border-slate-200 bg-slate-50 shrink-0">
+                <div class="follow-up-area hidden p-3 sm:p-4" id="followUpArea">
+                    <div class="suggestion-buttons" id="suggestionButtons"></div>
+                    <div class="follow-up-input-area flex-col sm:flex-row mt-2 sm:mt-0">
+                        <input type="text" id="followUpInput" class="follow-up-input text-sm shadow-inner" placeholder="基于方案输入追问，系统将智能判别意图（寻源配套或宏观分析）..." onkeydown="if(event.key==='Enter') XiqingApp.handleFollowUp();"/>
+                        <button id="followUpBtn" class="follow-up-btn text-sm py-2 shadow-md" onclick="XiqingApp.handleFollowUp()">核心追问</button>
+                    </div>
+                </div>
+                <div class="p-3 sm:p-4 flex flex-wrap justify-end gap-2 sm:gap-3 bg-white border-t border-slate-100">
+                    <button id="exportExcelBtn" onclick="XiqingApp.handleExportExcel()" class="hidden px-4 sm:px-5 py-2 sm:py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold rounded-lg hover:bg-emerald-100 transition-colors shadow-sm text-xs sm:text-sm flex items-center gap-1.5 flex-1 sm:flex-none justify-center">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>导出推荐台账
+                    </button>
+                    <button id="saveReportBtn" onclick="XiqingApp.handleSaveReport()" class="hidden px-4 sm:px-5 py-2 sm:py-2.5 bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold rounded-lg hover:bg-indigo-100 transition-colors shadow-sm text-xs sm:text-sm flex items-center gap-1.5 flex-1 sm:flex-none justify-center">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>沉淀报告
+                    </button>
+                    <button onclick="XiqingApp.UI.copyToClipboard(document.getElementById('aiMatchResult').innerText)" class="px-4 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors shadow-sm text-xs sm:text-sm flex items-center gap-1.5 flex-1 sm:flex-none justify-center">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>复制正文
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图谱配置中心 -->
+    <div id="dictConfigModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[70] backdrop-blur-md p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
+            <div class="bg-slate-50 p-4 sm:p-5 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2"><svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>本地产业图谱管理中心</h3>
+                <button onclick="XiqingApp.UI.closeModal('dictConfigModal')" class="text-slate-400 hover:text-slate-600 bg-white rounded-full p-1.5 border"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-5 flex-1 overflow-y-auto flex flex-col gap-3">
+                <p class="text-sm text-slate-600">在此配置前端极速扩维字典（格式为 <code class="bg-slate-100 px-1 rounded">产业节点: 关键词1、关键词2</code> ），修改后立即生效，节省 Token 消耗。</p>
+                <textarea id="dictInput" class="w-full flex-1 min-h-[300px] p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 font-mono text-sm leading-relaxed"></textarea>
+            </div>
+            <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
+                <button onclick="XiqingApp.handleResetDict()" class="px-5 py-2.5 bg-white border text-slate-600 font-bold rounded-lg hover:bg-slate-100 text-sm">恢复默认图谱</button>
+                <button onclick="XiqingApp.handleSaveDict()" class="px-5 py-2.5 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 text-sm shadow-md">保存并生效</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 历史库 -->
+    <div id="historyModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[60] backdrop-blur-md p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-200">
+            <div class="bg-slate-50 p-4 sm:p-5 border-b border-slate-200 flex justify-between items-center shrink-0">
+                <div><h3 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">📜 撮合沉淀历史库</h3></div>
+                <button onclick="XiqingApp.UI.closeModal('historyModal')" class="text-slate-400 hover:text-slate-600 bg-white rounded-full p-2 border"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-50/50"><div id="historyList" class="flex flex-col gap-3 sm:gap-4"></div></div>
+        </div>
+    </div>
+
+    <!-- API 配置 -->
+    <div id="apiKeyModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[70] backdrop-blur-md p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-slate-50 p-5 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2"><svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>设置 API Key</h3>
+            </div>
+            <div class="p-6">
+                <input type="password" id="apiKeyInput" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm" placeholder="sk-..." />
+                <div class="flex justify-end gap-3 mt-6">
+                    <button onclick="XiqingApp.UI.closeModal('apiKeyModal')" class="px-5 py-2.5 bg-white border text-slate-700 font-bold rounded-lg">取消</button>
+                    <button onclick="XiqingApp.handleSaveApiKey()" class="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-lg">安全保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 企业详情模态框 -->
+    <div id="companyDetailModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[80] backdrop-blur-md p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-200">
+            <div class="bg-slate-50 p-4 sm:p-5 border-b border-slate-200 flex justify-between items-center shrink-0">
+                <h3 class="text-lg sm:text-xl font-bold text-slate-800" id="detailModalTitle">企业详情</h3>
+                <button onclick="XiqingApp.UI.closeModal('companyDetailModal')" class="text-slate-400 hover:text-slate-600 bg-white rounded-full p-1.5 border"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 flex flex-col gap-4 text-sm sm:text-base text-slate-700" id="detailModalContent"></div>
+            <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
+                <button id="detailCopyBtn" class="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 text-sm shadow-md">一键复制名片</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 核心逻辑：MVC/模块化模式 -->
+    <script>
+        (function(global) {
+            'use strict';
+
+            /** [模块 1] 核心常量与配置 (CONFIG) */
+            const CONFIG = {
+                STORAGE: {
+                    DB_NAME: 'XiqingRadar_DB', STORE_NAME: 'enterprise_collection', DATA_KEY: 'xq_industry_data_v4',
+                    HISTORY_KEY: 'xq_history_v4', API_KEY: 'xq_deepseek_key', DICT_KEY: 'xq_custom_dict_v1', DRAFT_KEY: 'xq_ai_draft_v1'
+                },
+                AI: { ENDPOINT: 'https://api.deepseek.com/v1/chat/completions', MODEL: 'deepseek-chat', TEMP: 0.2 },
+                RULES: {
+                    PAGE_SIZE: 20, WEIGHT_CORE: 10, WEIGHT_NORMAL: 5, SCORE_EXACT: 20, SCORE_PARTIAL: 5,
+                    CORE_KEYWORDS: ['高新', '领先', '最大', '认证', '体系', '国家级', '一流', '专精特新'],
+                    CATEGORIES: ['电子信息', '汽车配套', '高端装备制造', '生物医药', '大健康食品', '新能源材料', '现代服务业', '包装/印刷/其他']
+                },
+                DEFAULT_DICT: {
+                    "电子信息-集成电路": ["8英寸晶圆", "90纳米制程", "Low-k铜互连", "BCD工艺", "晶圆测试", "CP测试", "芯片成品测试", "FT测试", "老化测试", "老练实验", "三温测试", "芯片封装", "ATE自动测试设备", "探针台", "分选机", "测试接口板", "邦定板", "封装基板", "SoC", "定制芯片", "DDR PHY", "MIPI CSI2接口", "数字混合电路", "光刻机", "集成电路", "芯片", "IC"],
+                    "电子信息-显示器件": ["薄膜开关", "轻触式键盘", "电容式开关", "触摸键盘", "标牌面板", "汽车表码盘", "设备仪表面板", "电表铭牌", "微显示驱动芯片", "AR/VR核心元器件", "显示屏", "面板"],
+                    "电子信息-元器件及材料": ["片式电阻器", "低阻值金属板电阻器", "铝电解电容", "径向型电容", "SMD Type", "V-Chip", "超级电容", "EDLC", "绿帽型", "活性炭电极", "焊锡膏", "锡条", "锡棒", "SAC305", "无铅锡条", "离型膜", "玛拉胶带", "MYLAR胶带", "麦拉胶带", "压敏胶粘剂", "导电布", "电磁屏蔽材料", "磁力线限制材料", "模切产品", "屏幕保护膜", "按键垫片", "电池绝缘片"],
+                    "电子信息-传感器控制": ["温度传感器", "铂热电阻", "PT100", "转速传感器", "角速度传感器", "MEMS技术", "霍尔传感器", "接近开关", "光电开关", "超声波传感器", "区域传感器", "压力变送器", "拉压力传感器", "轮辐式传感器", "S型梁结构", "电磁流量计", "涡轮流量计", "光电旋转编码器", "绝对值多圈编码器", "现场总线模块", "IO-LINK模块", "工业物联网边缘网关", "智慧物联安全终端"],
+                    "电子信息-线缆连接器": ["漆包铜线", "绕组线", "换位导线", "传感器电缆", "CGYPU", "耐水漂浮电缆", "中心管填充式室外光缆", "层绞填充式", "紧包室内光缆", "光纤活动连接器", "阻燃电缆", "耐火电缆", "RG同轴线", "通信通讯线缆", "特种线缆", "连接器Socket", "QFP封装检测", "SOP封装检测", "BGA封装检测", "Pinblock", "BTB连接器", "FPC连接器"],
+                    "汽车配套-驱动传动": ["同步器齿毂", "齿套", "同步器组件", "行星齿轮支撑架", "换挡执行机构", "换挡轴总成", "连接轴", "球铰接轴", "粉末冶金件", "冷挤压成型", "冷锻", "三元催化器", "稀土催化剂", "贵金属催化剂"],
+                    "汽车配套-转向制动": ["电动助力转向器", "RP-EPS", "DP-EPS", "扭矩传感器", "转向系统部件", "悬架球接头", "充气减震器", "底盘防震橡胶", "电磁离合器", "电磁制动器", "减震器垫片", "刹车油管连接件", "悬挂螺母"],
+                    "汽车配套-电气热管理": ["汽车空调总成", "HVAC", "蒸发器", "冷凝器", "温控执行器", "电池热管理系统", "摇窗电机", "低压配管", "高压配管", "热水管", "热交换功能配管", "电池水冷板", "CHILLER电池水冷器", "水冷冷凝器", "变频器冷却器", "INVC冷却器", "铝制散热器", "变流器冷却单元", "扁平多孔管", "集液槽"],
+                    "汽车配套-线束安全": ["车身线束", "高压线束", "低压线束", "0.13铜镁合金导线", "光纤技术线束", "安全气囊", "AB", "叠氮化钠", "安全带", "SB", "方向盘", "SW", "安全带未系提醒传感器", "SBR", "方向盘加热系统", "方向盘离手检测系统", "HOD"],
+                    "汽车配套-内外饰": ["汽车脚垫", "丝圈脚垫", "座椅面套", "BCM", "顶棚内饰", "门板内饰", "行李箱内饰总成", "行李箱地毯", "座椅头枕", "座椅扶手", "座椅风扇", "气动腰托支撑", "气动按摩系统", "轮罩护板", "密封条", "汽车玻璃", "前后挡风玻璃", "夹层玻璃", "塑料油箱", "玻璃水箱", "沥青阻尼片", "隔音垫", "非织造地毯"],
+                    "汽车配套-智能网联": ["智能泊车系统", "环绕感知系统", "AVM全景环视系统", "鱼眼相机", "数据采集设备", "双目立体视觉传感器", "魔毯悬架系统", "路面预瞄系统", "自动驾驶芯片", "智能感知计算平台"],
+                    "高端装备-矿山机械": ["采煤机大部件", "修复再制造", "振动筛", "激振器", "箱式激振器", "筛板", "多孔板", "输送带修补材料", "滚筒包胶材料", "皮带清扫器", "缓冲床", "纠偏装置", "选煤厂智能化系统", "低压开关柜", "DTK-M", "中压开关柜", "KYN28A", "智能箱式变电站", "带式输送机托辊", "电动滚筒", "支架电液控制系统", "智能干选机", "TDS", "X光灰分仪", "锚固剂", "锚杆", "管缝式锚杆", "ST网", "勾花网", "锚索", "鸟窝成型", "阻尼螺母"],
+                    "高端装备-液压流体": ["高压柱塞泵", "超高压清洗机组", "宝石喷嘴", "AGC伺服液压缸", "比例液压缸", "数字液压缸", "高压齿轮泵体", "调节阀", "CRG", "CCG", "气动旋转喷枪", "电磁阀", "膨胀阀", "减压阀", "潜油电泵机组", "ESP", "潜水泵", "海水潜水泵", "防爆电机", "QWB潜油涡轮泵", "电磁推动器", "潜水排污泵", "潜水轴流泵", "潜水贯流泵", "取水泵船", "格栅除污机", "移动泵车"],
+                    "高端装备-工具磨具": ["激光对刀仪", "切削刀具", "车刀研磨机", "金刚石砂轮", "PCD刀具", "PCBN刀具", "超硬刀具", "珩磨头", "点焊枪", "伺服焊钳", "双端面研磨机", "抛光设备"],
+                    "高端装备-非标自动化": ["全自动伺服拧紧机", "精密伺服压入机", "自动组付机", "自动化搬送设备", "匀胶设备", "晶圆外观检测设备", "PST倒托盘设备", "PCT组装线体", "重型磁滚筒", "涡流分选机", "干式振动过滤器", "DVMF", "湿式强磁过滤器", "HI FILTER", "工业传送带", "AGV无人运输车", "热处理设备制造", "真空热处理设备", "高炉L2系统", "全位置自动焊接设备", "在线清洗单元", "CIP", "手套箱", "溶剂净化系统", "加工中心", "热镀锌生产线", "工业铝型材快速组装系统", "高速工业用包缝机", "高速工业用绷缝机"],
+                    "生物医药-化学药": ["替米沙坦片", "格列齐特缓释片", "辛伐他汀片", "吲达帕胺片", "寿比山", "伊曲康唑胶囊", "美扶", "包醛氧淀粉胶囊", "析清", "醋酸氟轻松乳膏", "盐酸二甲双胍片", "注射用醋酸亮丙瑞林微球", "抑那通", "富马酸伏诺拉生片", "沃克", "一甲基澳瑞他汀E", "MMAE", "艾乐替尼", "伏立康唑", "医药中间体"],
+                    "生物医药-中药": ["中药提取物", "防风通圣散", "小青龙汤", "汉方药", "中药饮片", "常规饮片", "细贵饮片", "管制类饮片", "肾炎康复片", "脉管复康片", "血府逐瘀胶囊", "养血生发胶囊", "白癜风胶囊", "冠心苏合胶囊", "经典名方"],
+                    "生物医药-医疗器械": ["牙胶尖", "吸潮纸尖", "腔镜切割吻合器", "微创筋膜闭合器", "颅内牵开固定导管", "微型电动打磨机", "移动式头部锥形束体层摄影设备", "移动CT", "限束器", "特定蛋白分析仪", "全自动电泳仪", "全自动凝血分析仪", "IVD试剂盒", "肿瘤甲基化检测试剂盒", "病原微生物检测", "定制式固定义齿", "定制式活动义齿", "胰岛素泵", "胰岛素注射笔零件", "异种骨修复材料", "干眼治疗仪", "IPL", "医用紫外线杀菌灯"],
+                    "生物医药-医用材料": ["手术体位垫", "负极板回路垫", "注射穿刺器械", "医用高分子材料", "聚醚醚酮", "聚乳酸", "手术衣", "手术盖单", "长纤聚酯敷料", "微生物干粉培养基", "细胞培养瓶", "排龈膏", "牙周抑菌凝胶"],
+                    "高端护理-日化品": ["透明质酸原液", "美白精华乳", "凝时舒颜精华露", "洗衣液", "洗洁精", "洗手液", "油污克星", "浓缩洗涤剂", "机洗至尊", "冻干面膜", "深冷冻干技术", "牙膏", "益生菌牙膏", "漱口水", "沐浴油", "蒸汽热敷眼罩", "发热暖贴", "椰油酰胺丙基二甲基甜菜碱"],
+                    "高端护理-卫生用品": ["纸尿裤", "尿不湿", "拉拉裤", "卫生巾", "护垫", "婴儿湿巾", "成人纸尿裤", "护理垫", "吸水纸", "吸水芯材", "无尘纸", "绒毛浆", "SAP高吸水树脂", "PE打孔膜", "离型纸", "硅油纸", "格拉辛纸", "包装袋复合膜"],
+                    "大健康食品-烘焙薯条": ["提子饼干", "朱古力饼干", "早餐饼干", "桃李面包", "桃李粽子", "桃李月饼", "阿拉棒", "蓝莓曲奇", "乳酪金砖", "红丝绒蛋糕", "慕斯蛋糕", "冷冻面团", "非膨化薯条", "低温锁鲜技术"],
+                    "大健康食品-饮料酒类": ["无糖气泡水", "燃茶", "赤藓糖醇", "益生元低聚糖果", "磷脂直饮粉", "菊粉", "高乐高固体饮料", "卷卷心蛋糕", "脆力棒", "麦巧客", "挂耳咖啡", "耶加雪啡", "冻干咖啡", "精酿啤酒", "IPA", "植物酸奶"],
+                    "大健康食品-速食辅料": ["肉酥", "肉干", "牛肉粒", "魏家凉皮", "车厘子", "榴莲", "蓝莓", "速冻包子", "速冻面食礼盒", "牛丼", "牛肉咖喱饭", "脱皮芝麻", "炒芝麻", "肉质改良剂", "裹浆粉", "唐扬粉", "静菌剂", "石墨全麦粉"],
+                    "新能源材料-风电光伏": ["电工级氧化镁粉", "风电主控系统", "风电变频器", "变桨系统", "交流变桨", "智能微网", "储能系统集成", "储能变流器", "PCS", "能量管理系统", "EMS", "电池管理系统", "BMS", "光伏支架", "跟踪支架", "光解水制氢系统", "光氢模组", "液冷机柜", "自然冷却技术"],
+                    "新能源材料-功能膜材": ["熔喷布", "PP无纺布", "SMS布", "气流成网布", "BOPET薄膜", "BOPP薄膜", "聚四氟乙烯电缆薄膜", "PTFE微孔膜", "高反射率反射膜", "太阳能背板基膜", "高端彩色薄膜", "哑光膜", "碳气凝胶", "超级电容材料", "热熔胶", "结构粘接胶"],
+                    "现代服务-信息技术": ["5G媒体直播", "5G工业互联网", "5G视频安防", "工作手机VPDN", "智能手机解决方案", "智能驾驶舱软件", "TurboX智能大脑平台", "ASIC设计方案", "YouDDR", "SoC平台服务", "数字化工厂系统", "MES", "WMS", "SCADA", "IoTHub工业互联网平台", "AppDesigner低代码开发", "工程建设BIM咨询"],
+                    "现代服务-仓储物流": ["3PL系统物流", "保税仓运营", "JIT运输", "VMI服务", "零库存管理", "出口监管库", "恒温恒湿仓库", "冷链仓储", "冷链运输", "干线运输", "医药冷运", "自动分拣系统", "现代物流基础设施", "卸货平台"],
+                    "现代服务-检验检测": ["计量校准", "环境可靠性测试", "电磁兼容检测", "EMC", "化学分析检测", "RoHS检测", "失效分析", "软件测评", "水质检测", "土壤监测", "大气环境检测", "噪声检测", "机动车灯具配光检测", "工艺安全评估服务", "HAZOP分析", "矿产金属检测", "医学独立实验室诊断", "DNA倍体定量分析", "食品农产品检测", "防雷装置检测", "房屋安全性鉴定", "无损检测", "职业病危害评价", "地面光伏组件认证"],
+                    "包装印刷-包材类": ["预涂膜", "塑封膜", "抗菌膜", "无缝纸管", "压光纸管", "氨纶纸管", "铁头纸管", "塑料瓶", "HDPE瓶", "PET瓶", "吹塑工艺", "注塑工艺", "覆铁膜", "黑膜", "拉伸自粘缠绕膜", "热收缩薄膜", "瓦楞纸箱", "彩盒", "液体洗涤剂包装"],
+                    "包装印刷-印刷防伪": ["玻璃瓶激光印刷", "不干胶标签印刷", "防伪标签", "电码防伪", "数码刮开式", "激光防伪", "荧光防伪", "纹理防伪", "版纹防伪", "电子标签", "工业胶带", "仿金属蚀刻丝网印刷", "菲林制版", "叠印套印", "报刊印刷", "CTP数字化流程"]
+                }
+            };
+
+            /** [模块 2] 状态管理层 (Model) */
+            const State = {
+                apiKey: localStorage.getItem(CONFIG.STORAGE.API_KEY) || '',
+                allData: [], filteredData: [], currentCategory: 'all', currentPage: 0, scrollObserver: null,
+                localDict: {}, 
+                aiSession: { startTime: null, conversation: [], currentReport: null, abortController: null, animationTimer: null, targetData: [] },
+                logoClickCount: 0, logoClickTimer: null
+            };
+
+            localforage.config({ name: CONFIG.STORAGE.DB_NAME, storeName: CONFIG.STORAGE.STORE_NAME });
+
+            /** [模块 3] 业务逻辑抽象 (Business Logic) */
+            const Logic = {
+                calculateWeight(text) {
+                    if (!text) return CONFIG.RULES.WEIGHT_NORMAL;
+                    return CONFIG.RULES.CORE_KEYWORDS.some(kw => text.toLowerCase().includes(kw)) ? CONFIG.RULES.WEIGHT_CORE : CONFIG.RULES.WEIGHT_NORMAL;
+                },
+                expandQueryByDict(userQuery) {
+                    let expanded = new Set([userQuery]); let hitNodes = [];
+                    for (const [node, keywords] of Object.entries(State.localDict)) {
+                        if (node.includes(userQuery) || keywords.some(kw => userQuery.includes(kw) || kw.includes(userQuery))) {
+                            keywords.forEach(kw => expanded.add(kw)); hitNodes.push(node);
+                        }
+                    }
+                    return { keywords: Array.from(expanded), hitNodes };
+                },
+                scoreAndSortData(expandedKeywords, rawQuery) {
+                    return State.allData.map(item => {
+                        let isCatMatch = State.currentCategory === 'all' || (State.currentCategory === '包装/印刷/其他' && (item.category.includes('包装') || item.category.includes('印刷') || item.category.includes('其他'))) || item.category.includes(State.currentCategory) || (item.subcategory && item.subcategory.includes(State.currentCategory));
+                        if (!isCatMatch) return { item, score: -1 };
+                        let txt = `${item.name} ${item.product} ${item.description} ${item.capacity} ${item.category}`.toLowerCase();
+                        if (!rawQuery) return { item, score: item.weight || CONFIG.RULES.WEIGHT_NORMAL };
+                        let score = 0;
+                        expandedKeywords.forEach(kw => { if (kw && txt.includes(kw.toLowerCase())) score += rawQuery.includes(kw) ? CONFIG.RULES.SCORE_EXACT : CONFIG.RULES.SCORE_PARTIAL; });
+                        if (score > 0) score = score * (item.weight || CONFIG.RULES.WEIGHT_NORMAL);
+                        return { item, score: score > 0 ? score : -1 };
+                    }).filter(x => x.score > -1).sort((a, b) => b.score - a.score).map(x => x.item);
+                }
+            };
+
+            /** [模块 4] 视图与交互引擎 (UI View) */
+            const UI = {
+                showToast(msg, type = 'info') {
+                    const c = document.getElementById('toast-container'); const t = document.createElement('div');
+                    let bg = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-red-600' : type === 'warning' ? 'bg-amber-500' : 'bg-slate-800';
+                    t.className = `toast-enter ${bg} text-white px-6 py-3 rounded-xl shadow-lg font-medium text-sm flex items-center gap-2 pointer-events-auto mx-4 border border-white/20`;
+                    t.innerHTML = `<span>${msg}</span>`; c.appendChild(t);
+                    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-10px)'; t.style.transition = 'all 0.3s ease'; setTimeout(() => t.remove(), 300); }, 3000);
+                },
+                openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); },
+                closeModal(id) { 
+                    document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); 
+                    if (id === 'aiMatchModal') AppController.abortAISession();
+                },
+                showApiKeyModal() { document.getElementById('apiKeyInput').value = State.apiKey; this.openModal('apiKeyModal'); },
+                showDictModal() {
+                    const txt = Object.entries(State.localDict).map(([k, v]) => `${k}: ${v.join('、')}`).join('\n');
+                    document.getElementById('dictInput').value = txt; this.openModal('dictConfigModal');
+                },
+                handleLogoClick() {
+                    State.logoClickCount++;
+                    if (State.logoClickTimer) clearTimeout(State.logoClickTimer);
+                    State.logoClickTimer = setTimeout(() => { State.logoClickCount = 0; }, 1500); 
+                    if (State.logoClickCount >= 5) {
+                        State.logoClickCount = 0; this.showToast('🚀 已激活隐藏图谱配置通道', 'success'); this.showDictModal();
+                    }
+                },
+                async showHistoryModal() { 
+                    try {
+                        const h = (await localforage.getItem(CONFIG.STORAGE.HISTORY_KEY)) || []; 
+                        const c = document.getElementById('historyList'); 
+                        c.innerHTML = h.length ? h.map(i => `<div class="bg-white border p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm hover:shadow transition"><div><h4 class="font-bold text-sm sm:text-base line-clamp-1">🔍 ${i.query}</h4><p class="text-[10px] sm:text-xs text-slate-400 mt-1">${i.timestamp}</p></div><div class="flex gap-2 w-full sm:w-auto justify-end"><button onclick="XiqingApp.handleViewHistory('${i.id}')" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs sm:text-sm font-bold rounded-lg hover:bg-indigo-100">调阅方案</button><button onclick="XiqingApp.handleDeleteHistory('${i.id}')" class="text-slate-400 hover:text-red-500 text-xs sm:text-sm px-2">删除</button></div></div>`).join('') : '<div class="text-center py-12 text-slate-400 text-sm">暂无归档记录</div>'; 
+                        this.openModal('historyModal'); 
+                    } catch(e) { this.showToast('记录读取异常', 'error'); }
+                },
+                renderCategories() {
+                    const c = document.getElementById('categoryFilters'); c.innerHTML = '';
+                    ['all', ...CONFIG.RULES.CATEGORIES].forEach(cat => {
+                        const isSel = State.currentCategory === cat;
+                        const cls = isSel ? "filter-btn px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow border border-indigo-500" : "filter-btn px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium bg-white/5 text-indigo-100 border border-white/10 hover:bg-white/15";
+                        c.insertAdjacentHTML('beforeend', `<button onclick="XiqingApp.setFilter('${cat}')" class="${cls}">${cat==='all'?'全部产业':cat}</button>`);
+                    });
+                },
+                highlight(text, keyword) { return (!text || !keyword) ? (text || '') : text.replace(new RegExp(`(${keyword})`, 'gi'), '<span class="highlight">$1</span>'); },
+                renderGridBatch(keyword) {
+                    const grid = document.getElementById('resultsGrid');
+                    const start = State.currentPage * CONFIG.RULES.PAGE_SIZE; const end = start + CONFIG.RULES.PAGE_SIZE; const batch = State.filteredData.slice(start, end);
+                    const oldSentinel = document.getElementById('scroll-sentinel'); if (oldSentinel) oldSentinel.remove();
+                    batch.forEach(item => {
+                        const isCore = item.weight >= CONFIG.RULES.WEIGHT_CORE;
+                        grid.insertAdjacentHTML('beforeend', `
+                            <div class="bg-white/95 backdrop-blur-xl rounded-xl shadow-md border ${isCore ? 'border-amber-200' : 'border-slate-200/60'} hover:shadow-xl transition-all flex flex-col h-full overflow-hidden group">
+                                <div class="p-4 border-b border-slate-100 bg-gradient-to-b ${isCore ? 'from-amber-50/50' : 'from-slate-50/80'} to-transparent relative">
+                                    <div class="flex items-center flex-wrap"><span class="text-[9px] font-black text-indigo-700 bg-indigo-100 px-2 py-1 rounded-md uppercase">${item.category}</span>${isCore ? `<span class="badge-core text-[10px] px-2 py-0.5 rounded shadow-sm ml-2 whitespace-nowrap">🌟 核心</span>` : ''}</div>
+                                    <h3 class="text-base font-bold text-slate-900 mt-2 line-clamp-2">${this.highlight(item.name, keyword)}</h3>
+                                </div>
+                                <div class="p-4 flex-1 flex flex-col gap-3">
+                                    <div><h4 class="text-[10px] font-bold text-slate-400 mb-1">主营业务</h4><div class="text-xs font-semibold text-slate-800 line-clamp-2">${this.highlight(item.product, keyword)}</div></div>
+                                    <div><h4 class="text-[10px] font-bold text-slate-400 mb-1">详情资质</h4><p class="text-xs text-slate-600 line-clamp-3">${this.highlight(item.description, keyword)} <br><span class="text-indigo-600/80">${this.highlight(item.capacity||'', keyword)}</span></p></div>
+                                </div>
+                                <div class="p-3 bg-slate-50/80 border-t border-slate-100 mt-auto flex justify-between items-center">
+                                    <button onclick="XiqingApp.showCompanyDetail('${item.id}')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">查看完整详情</button>
+                                    <button onclick="XiqingApp.copyBusinessCard('${item.id}')" class="text-xs font-bold text-slate-600 hover:text-slate-800 bg-white px-2.5 py-1 rounded border border-slate-200 shadow-sm transition-colors hover:bg-slate-50">复制名片</button>
+                                </div>
+                            </div>`);
+                    });
+                    if (end < State.filteredData.length) {
+                        const sentinel = document.createElement('div'); sentinel.id = 'scroll-sentinel'; sentinel.className = 'col-span-full py-6 flex justify-center items-center text-slate-400 text-sm'; sentinel.innerHTML = '<div class="animate-spin h-4 w-4 border-2 border-indigo-400 border-t-transparent rounded-full mr-2"></div> 加载中...'; grid.appendChild(sentinel);
+                        State.scrollObserver = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) { State.scrollObserver.disconnect(); State.currentPage++; this.renderGridBatch(keyword); } }, { rootMargin: '150px' }); State.scrollObserver.observe(sentinel);
+                    }
+                },
+                updateGridEmptyState() { document.getElementById('resultsGrid').innerHTML = `<div class="col-span-full text-center py-16 sm:py-24 bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/50 shadow-sm"><div class="text-4xl sm:text-6xl mb-5 text-slate-300">🤖</div><h3 class="text-lg sm:text-xl font-black text-slate-700 mb-2">常规范畴未能覆盖</h3><p class="text-xs sm:text-sm text-slate-500 mb-8 px-4">建议唤醒混合智能图谱进行高维推演。</p><button onclick="XiqingApp.handleTriggerAI()" class="ai-btn-gradient px-6 py-3 rounded-xl text-sm font-bold shadow-lg">✨ 启动生态架构演算</button></div>`; },
+                spawnKeywordParticle(text) { const c = document.getElementById('floating-keywords'); if (!c) return; const el = document.createElement('div'); el.className = 'floating-kw'; el.innerText = text; const a = Math.random() * Math.PI * 2; const r = 80 + Math.random() * 80; el.style.left = (50 + Math.cos(a) * 10) + '%'; el.style.top = (50 + Math.sin(a) * 10) + '%'; const tx = Math.cos(a) * r; const ty = Math.sin(a) * r; el.animate([{ opacity: 0, transform: `translate(0, 0) scale(0.5)` }, { opacity: 1, transform: `translate(${tx*0.5}px, ${ty*0.5}px) scale(1.1)`, offset: 0.2 }, { opacity: 0.8, transform: `translate(${tx*0.8}px, ${ty*0.8}px) scale(1)`, offset: 0.8 }, { opacity: 0, transform: `translate(${tx}px, ${ty}px) scale(0.9)` }], { duration: 2500 + Math.random()*1000, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' }); c.appendChild(el); setTimeout(() => el.remove(), 3500); },
+                stopCyberAnimations() { if (State.aiSession.animationTimer) clearInterval(State.aiSession.animationTimer); const c = document.getElementById('floating-keywords'); if (c) c.innerHTML = ''; },
+                copyToClipboard(text) { const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t); this.showToast('✅ 核心内容已复制','success'); },
+                showCompanyDetail(item) {
+                    document.getElementById('detailModalTitle').innerText = item.name;
+                    document.getElementById('detailModalContent').innerHTML = `
+                        <div><span class="text-xs font-bold text-slate-400 uppercase">所属产业</span><br><span class="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded mt-1 inline-block">${item.category}</span></div>
+                        <div><span class="text-xs font-bold text-slate-400 uppercase">主营业务</span><div class="font-semibold mt-1">${item.product || '暂无'}</div></div>
+                        <div><span class="text-xs font-bold text-slate-400 uppercase">详情介绍</span><div class="mt-1 whitespace-pre-wrap leading-relaxed">${item.description || '暂无'}</div></div>
+                        <div><span class="text-xs font-bold text-slate-400 uppercase">资质与产能</span><div class="mt-1 text-indigo-600 font-medium">${item.capacity || '暂无'}</div></div>
+                    `;
+                    document.getElementById('detailCopyBtn').onclick = () => XiqingApp.copyBusinessCard(item.id);
+                    this.openModal('companyDetailModal');
+                }
+            };
+
+            /** [模块 5] AI 引擎通讯层 (AI Service) */
+            const AIEngine = {
+                async fetchStream(messages, onChunk, signal) {
+                    if (!State.apiKey) throw new Error('未设置 API Key');
+                    const response = await fetch(CONFIG.AI.ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${State.apiKey}` }, body: JSON.stringify({ model: CONFIG.AI.MODEL, messages: messages, stream: true, temperature: CONFIG.AI.TEMP }), signal: signal });
+                    if (!response.ok) throw new Error(`API 服务异常 (${response.status})`);
+                    const reader = response.body.getReader(); const decoder = new TextDecoder('utf-8'); let buffer = '';
+                    while (true) {
+                        const { done, value } = await reader.read(); if (done) break;
+                        buffer += decoder.decode(value, { stream: true }); const lines = buffer.split('\n'); buffer = lines.pop() || '';
+                        for (const line of lines) {
+                            if (line.startsWith('data: ') && line.slice(6) !== '[DONE]') {
+                                try { const parsed = JSON.parse(line.slice(6)); const content = parsed.choices[0]?.delta?.content || ''; if (content) onChunk(content); } catch (e) {}
+                            }
+                        }
+                    }
+                }
+            };
+
+            /** [模块 6] 文档解析器 (Data Parser) */
+            const DocParser = {
+                async processWord(arrayBuffer) {
+                    const res = await mammoth.extractRawText({arrayBuffer}); let lines = res.value.split(/\r?\n/).map(l => l.trim()).filter(l => l); let map = new Map(); let cur = null; let curCat = '包装/印刷/其他'; let curCtx = 'description'; 
+                    const save = (c) => { if (!c || !c.name) return; if (c.prospect && !c.description.includes(c.prospect)) c.description += '\n【前景】' + c.prospect; let ext = map.get(c.name); if (ext) { ext.product += '、' + c.product; ext.description += '\n' + c.description; } else { c.id = 'gen_' + Math.random().toString(36).substr(2, 9); c.weight = Logic.calculateWeight(c.description + ' ' + c.capacity); map.set(c.name, c); } };
+                    for (let i = 0; i < lines.length; i++) {
+                        let line = lines[i]; if ((line.includes('篇') || line.includes('信息')) && line.length < 25 && !line.endsWith('公司')) { curCat = line.replace(/^[a-zA-Z\d\.\、一二三四五六七八九十]+/, '').replace('篇', '').trim(); continue; } let cleanLine = line.replace(/^[\d\.\、\(\)（）\s]+/, '').trim(); const isCpy = (cleanLine.endsWith('公司') || cleanLine.endsWith('厂') || cleanLine.match(/公司[\(（].*[\)）]$/)) && cleanLine.length >= 4 && cleanLine.length <= 60 && !cleanLine.includes('。');
+                        if (isCpy) { save(cur); cur = { name: cleanLine, category: curCat, product: '', description: '', capacity: '', prospect: '' }; curCtx = 'description'; continue; }
+                        if (cur) { let mP = line.match(/^(产品名称|核心产品)[：:\s]*(.*)/); let mD = line.match(/^(产品介绍|企业简介)[：:\s]*(.*)/); let mC = line.match(/^(行业资质|资质|企业规模|产能)[：:\s]*(.*)/); if (mP) { let v=mP[2].trim(); if(!v&&i+1<lines.length)v=lines[++i].trim(); if(v) cur.product+=(cur.product?'、':'')+v; curCtx='product'; } else if (mD) { let v=mD[2].trim(); if(!v&&i+1<lines.length)v=lines[++i].trim(); if(v) cur.description+=(cur.description?' ':'')+v; curCtx='description'; } else if (mC) { let v=mC[2].trim(); if(!v&&i+1<lines.length)v=lines[++i].trim(); if(v) cur.capacity+=(cur.capacity?' ':'')+v; curCtx='capacity'; } else if (line.length>2 && !isCpy && !/^\d+$/.test(line)) { if(curCtx==='product') cur.product+=' '+line; else cur.description+=' '+line; } }
+                    } save(cur); return Array.from(map.values());
+                },
+                processExcel(arrayBuffer) {
+                    const wb = XLSX.read(new Uint8Array(arrayBuffer), {type: 'array'}); const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); 
+                    return json.filter(row => row['企业名称'] || row['公司名称'] || row['Name']).map(row => { const name = row['企业名称'] || row['公司名称'] || row['Name']; const desc = row['经营范围'] || '暂无详情'; const cap = row['规模'] || '台账补充数据'; return { id: 'qcc_' + Math.random().toString(36).substr(2, 9), name, category: "补充产业", product: '详见简介', description: desc, capacity: cap, weight: Logic.calculateWeight(desc + ' ' + cap) }; });
+                }
+            };
+
+            /** [模块 7] 核心控制器 (Controller) */
+            const AppController = {
+                async init() {
+                    try {
+                        const customDict = await localforage.getItem(CONFIG.STORAGE.DICT_KEY);
+                        State.localDict = customDict || CONFIG.DEFAULT_DICT;
+                        const data = await localforage.getItem(CONFIG.STORAGE.DATA_KEY);
+                        State.allData = (data && data.length) ? data : [];
+                    } catch(e) { State.localDict = CONFIG.DEFAULT_DICT; }
+                    UI.renderCategories(); this.handleSearch();
+                },
+
+                setFilter(cat) { State.currentCategory = cat; UI.renderCategories(); this.handleSearch(); },
+                handleSearch() {
+                    const query = document.getElementById('searchInput').value.trim();
+                    const expanded = Logic.expandQueryByDict(query).keywords;
+                    State.filteredData = Logic.scoreAndSortData(expanded, query);
+                    document.getElementById('resultCount').innerText = `归档 ${State.filteredData.length} 家`;
+                    if (State.scrollObserver) { State.scrollObserver.disconnect(); State.scrollObserver = null; }
+                    State.currentPage = 0; document.getElementById('resultsGrid').innerHTML = '';
+                    if (State.filteredData.length === 0) return UI.updateGridEmptyState();
+                    UI.renderGridBatch(query);
+                },
+
+                abortAISession() { if (State.aiSession.abortController) { State.aiSession.abortController.abort(); State.aiSession.abortController = null; } UI.stopCyberAnimations(); },
+
+                async saveDraft() {
+                    if (State.aiSession.conversation.length > 0) {
+                        await localforage.setItem(CONFIG.STORAGE.DRAFT_KEY, { query: State.aiSession.query, conversation: State.aiSession.conversation, targetData: State.aiSession.targetData, html: document.getElementById('aiMatchResult').innerHTML });
+                    }
+                },
+
+                async handleTriggerAI(isResume = false) {
+                    const query = document.getElementById('searchInput').value.trim();
+                    if (!query && !isResume) return UI.showToast("请输入需要撮合的需求", "warning");
+                    if (!State.apiKey) return UI.showApiKeyModal();
+
+                    this.abortAISession(); State.aiSession.abortController = new AbortController();
+                    State.aiSession.startTime = Date.now(); State.aiSession.query = query;
+
+                    UI.openModal('aiMatchModal');
+                    document.getElementById('saveReportBtn').classList.add('hidden'); document.getElementById('exportExcelBtn').classList.add('hidden');
+                    document.getElementById('followUpArea').classList.add('hidden'); document.getElementById('elapsedTimeBadge').classList.add('hidden');
+                    document.getElementById('draftBadge').classList.add('hidden');
+                    
+                    const resDiv = document.getElementById('aiMatchResult');
+
+                    if (isResume) {
+                        try {
+                            const draft = await localforage.getItem(CONFIG.STORAGE.DRAFT_KEY);
+                            if (draft && draft.conversation.length > 0) {
+                                State.aiSession.conversation = draft.conversation; State.aiSession.targetData = draft.targetData; State.aiSession.query = draft.query;
+                                document.getElementById('searchInput').value = draft.query;
+                                document.getElementById('aiMatchLoading').classList.add('hidden'); resDiv.classList.remove('hidden');
+                                resDiv.innerHTML = draft.html;
+                                document.getElementById('followUpArea').classList.remove('hidden'); document.getElementById('draftBadge').classList.remove('hidden');
+                                document.getElementById('exportExcelBtn').classList.remove('hidden');
+                                document.getElementById('suggestionButtons').innerHTML = '';
+                                
+                                return UI.showToast('✅ 成功恢复未完成的断点推演', 'success');
+                            }
+                        } catch(e){}
+                    }
+
+                    State.aiSession.conversation = []; State.aiSession.targetData = []; State.aiSession.currentReport = null;
+                    document.getElementById('aiMatchLoading').classList.remove('hidden'); resDiv.classList.add('hidden');
+                    const stText = document.getElementById('loadingStageText'); const smText = document.getElementById('hex-stream');
+
+                    try {
+                        stText.innerText = '1. 图谱解析：探测西青本地知识锚点...'; smText.innerText = '> 数据握手...';
+                        let expandedKw = Logic.expandQueryByDict(query).keywords;
+                        await new Promise(r => setTimeout(r, 600));
+
+                        if (expandedKw.length > 1) {
+                            stText.innerText = `1. 图谱瞬时反馈，锁定关联节点簇`;
+                            expandedKw.forEach((kw, i) => { setTimeout(() => { UI.spawnKeywordParticle(kw); smText.innerText = `[定向] >> ${kw}`; }, i * 150); });
+                            await new Promise(r => setTimeout(r, expandedKw.length * 150 + 500));
+                        } else {
+                            stText.innerText = '1. 启动产业图谱发散检索...'; 
+                            const p = `你是一个资深产业分析专家。用户现在的采购/寻找/供应需求是："${query}"。\n为了防止检索遗漏，请帮我极其发散地拓展出至少 20 到 30 个相关的关键词，包括但不限于：\n1. 核心需求的同义词、近义词、行业别称。\n2. 满足该需求所需的上下游零部件、原材料、周边配套产业。\n3. 相关的工艺技术、设备名称。\n不要有任何解释说明，纯粹返回逗号分隔的词语，越多越好。`; 
+                            let accStr = ''; let pl = 0;
+                            await AIEngine.fetchStream([{role: 'user', content: p}], (chunk) => { accStr += chunk; const match = accStr.substring(pl).match(/[^,，、\n]+[,，、\n]/g); if (match) match.forEach(m => { const k = m.replace(/[,，、\n]/g, '').trim(); if(k){ UI.spawnKeywordParticle(k); smText.innerText=`[推演] >> ${k}`; } pl+=m.length; }); }, State.aiSession.abortController.signal);
+                            expandedKw = [...query.split(/[\s,，、]+/), ...accStr.split(/[,，、\n]/)].map(x=>x.trim()).filter(x=>x);
+                        }
+
+                        stText.innerText = `2. 深层数据探针：执行动态权重雷达扫库...`;
+                        State.aiSession.animationTimer = setInterval(() => { smText.innerText = `[分析] -> ${State.allData[Math.floor(Math.random() * State.allData.length)]?.name || '...'}`; }, 40);
+                        
+                        const targetData = Logic.scoreAndSortData(expandedKw, query).slice(0, 60);
+                        State.aiSession.targetData = targetData; 
+                        await new Promise(r => setTimeout(r, 800)); clearInterval(State.aiSession.animationTimer);
+                        if(!targetData.length) throw new Error("库内无匹配支撑体系，建议补充台账。");
+
+                        stText.innerText = `3. 收敛 ${targetData.length} 个潜客，输出精准撮合报告...`;
+                        const ctxPayload = targetData.map(i => ({ 名称: i.name, 产业: i.category, 业务: i.product, 权重: i.weight === CONFIG.RULES.WEIGHT_CORE ? '核心梯队' : '标准梯队' }));
+                        
+                        // 【终极进化版 Prompt：完美融合“图谱分类结构”与“硬核落地风控”】
+                        const sysPrompt = `# 角色设定
+你现在是天津西青经开区的“首席产业撮合专家”与“资深产业链生态架构师”。
+企业的原始需求（供或需）是："${query}"
+
+雷达系统已经从庞大的政务通鉴库中，为你精准扫盲并锁定了以下具有高度关联的企业名录：
+${JSON.stringify(ctxPayload)}
+
+# 核心任务与输出结构 (严格遵守 Markdown 格式)
+请对这些企业进行深度交叉对比，寻找最能直接产生业务买卖或配套合作的企业，并按以下结构输出：
+
+### 🎯 核心精准匹配研判
+（挑选最能直接解决其核心需求的适配企业，宁缺毋滥）
+* **[企业名称]**（[梯队级别]）
+  * **深度契合点**：(一针见血地指出名录中该企业的具体核心技术、主营产品或产能，如何精准对标并解决客户的当前痛点，它的护城河是什么？)
+
+### 🔗 产业链全景延展配套
+（发散思维！跳出表层需求，挖掘名录中能为其提供隐性配套或跨界应用场景的企业。**必须将这些企业按产业链环节进行模块化归类**，如：研发与测试验证、核心部件与材料、控制系统与工业软件、非标集成与自动化等）
+* **【[产业链模块名称]】**
+  * **[企业名称]**：(说明其在该环节的具体产品作用，以及引入它将如何缩短物流半径、降低供应链成本，形成区内闭环)
+  * ...
+
+### 💡 专业对接建议与关键风险提示
+（作为资深企服人员，**绝对禁止**使用“发出邀请函”、“举办对接会”、“安排实地考察”等行政套话。请针对此次特定的匹配，强制从以下3个硬核维度给出专业意见）
+1. **技术壁垒与标准协同**：(剖析这几家企业若要合作，在物理接口、通信协议、工艺标准或认证壁垒上可能面临的匹配难点，及前置验证建议)
+2. **供应链磨合与交付风险**：(剖析非标定制、产能爬坡、原材料价格波动等实际生产环节的潜在合作风险，并给出防范或合同机制建议)
+3. **产业政策与首台套赋能**：(谋划如何利用区内“智能制造”、“专精特新”等专项资金补贴或首台套政策，降低企业首次合作的试错成本，打造示范案例)
+
+注意：推荐的企业【必须】且【只能】从我提供给你的名录中挑选，语气要专业、犀利，展现极高的商业洞察力。`;
+
+                        document.getElementById('aiMatchLoading').classList.add('hidden'); resDiv.classList.remove('hidden');
+                        resDiv.innerHTML = '<span class="text-indigo-400 font-mono text-sm animate-pulse">建立直连传输链路中...</span>';
+
+                        let acc = '';
+                        await AIEngine.fetchStream([{role:'system',content:sysPrompt}, {role:'user',content:'请出具高质量供需撮合报告。'}], (chunk) => {
+                            acc += chunk; resDiv.innerHTML = DOMPurify.sanitize(marked.parse(acc)); resDiv.scrollTop = resDiv.scrollHeight;
+                        }, State.aiSession.abortController.signal);
+
+                        State.aiSession.conversation.push({role:'system',content:sysPrompt}, {role:'assistant',content:acc});
+                        await this.saveDraft(); 
+
+                        State.aiSession.currentReport = { id: 'rpt_' + Date.now(), query, conversation: JSON.parse(JSON.stringify(State.aiSession.conversation)), timestamp: new Date().toLocaleString('zh-CN', { hour12: false }) };
+                        document.getElementById('saveReportBtn').classList.remove('hidden'); document.getElementById('exportExcelBtn').classList.remove('hidden'); document.getElementById('followUpArea').classList.remove('hidden');
+                        const bdg = document.getElementById('elapsedTimeBadge'); bdg.innerText = `⏱️ ${(Date.now()-State.aiSession.startTime)/1000}s`; bdg.classList.remove('hidden');
+                        document.getElementById('suggestionButtons').innerHTML = '';
+
+                    } catch (e) {
+                        if (e.name === 'AbortError') return;
+                        document.getElementById('aiMatchLoading').classList.add('hidden'); resDiv.classList.remove('hidden');
+                        const errHtml = `<div class="text-red-600 p-4 bg-red-50 rounded-xl border border-red-200 text-sm shadow mt-4"><p class="font-bold mb-1">❌ 演算网络阻断</p><p>${e.message}</p><div class="mt-2"><button onclick="XiqingApp.handleTriggerAI(true)" class="px-3 py-1.5 bg-red-600 text-white rounded font-bold hover:bg-red-700">尝试断点重连</button></div></div>`;
+                        if(State.aiSession.conversation.length > 0) resDiv.insertAdjacentHTML('beforeend', errHtml); else resDiv.innerHTML = errHtml;
+                    } finally { UI.stopCyberAnimations(); State.aiSession.abortController = null; }
+                },
+
+                async handleFollowUp() {
+                    const input = document.getElementById('followUpInput'); const q = input.value.trim(); if (!q) return;
+                    const btn = document.getElementById('followUpBtn'); btn.disabled = true; input.disabled = true; input.value = '';
+                    
+                    this.abortAISession(); State.aiSession.abortController = new AbortController();
+                    const resDiv = document.getElementById('aiMatchResult'); 
+                    const ldId = 'flLoad_' + Date.now();
+                    const replyBoxId = 'rpBox_' + Date.now(); 
+                    
+                    resDiv.insertAdjacentHTML('beforeend', `<div id="${ldId}" class="text-indigo-600 p-4 text-center mt-4 text-sm font-medium bg-indigo-50/50 rounded-xl"><div class="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-600 mr-2"></div>正在进行意图穿透分析...</div>`);
+
+                    try {
+                        let expandedKw = Logic.expandQueryByDict(q).keywords;
+                        let isMacroAnalysis = false;
+
+                        // 【重构核心 3：智能意图判别器】（区分“找企业”和“宏观问答”）
+                        if (expandedKw.length <= 1) {
+                            const p = `用户追问："${q}"。\n任务：判断这是一个“寻找新产业链配套”的实体检索，还是一个“深度剖析/战略咨询”的宏观问题。\n- 若是寻找实体配套：请发散至少20个底层零部件、工艺词汇（逗号分隔）。\n- 若是宏观问题（如询问壁垒、缺失环节、政策赋能等）：请直接输出“宏观分析题”五个字，不要任何废话。`;
+                            
+                            let accStr = '';
+                            await AIEngine.fetchStream([{role: 'user', content: p}], (chunk) => { accStr += chunk; }, State.aiSession.abortController.signal);
+                            
+                            if (accStr.includes("宏观分析题")) {
+                                expandedKw = []; // 清空搜索词，不去污染总库
+                                isMacroAnalysis = true;
+                            } else {
+                                expandedKw = [...q.split(/[\s,，、]+/), ...accStr.split(/[,，、\n]/)].map(x=>x.trim()).filter(x=>x);
+                            }
+                            document.getElementById(ldId).innerHTML = '<div class="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-600 mr-2"></div>全息战略推演中...';
+                        }
+
+                        const newTargetData = expandedKw.length > 0 ? Logic.scoreAndSortData(expandedKw, q).slice(0, 15) : []; 
+                        
+                        let hiddenContext = "";
+                        
+                        if (isMacroAnalysis) {
+                            hiddenContext = `\n\n[核心指令]：这是一个宏观策略或深度产业分析的追问。请基于前文的报告内容进行深度剖析。\n1. 重点分析技术壁垒、供应链风险、区内缺失环节或招商引资方向。\n2. **严禁**捏造或询问具体企业的“产能数字、产值”等微观ERP数据。\n3. 直接给出硬核的专业见解，不要说废话。`;
+                        } else if (newTargetData.length > 0) {
+                            const ctxPayload = newTargetData.map(i => ({ 名称: i.name, 产业: i.category, 业务: i.product }));
+                            hiddenContext = `\n\n[系统提示]：针对该实体寻源需求，雷达新探测到关联企业：${JSON.stringify(ctxPayload)}。\n[指令]：务必基于这批新企业精准撮合，寻找增量资源。不要重复前文老调重弹，除非用于对比。`;
+                        } else {
+                            hiddenContext = `\n\n[系统提示]：针对该需求，区内暂无高度匹配的新企业记录。\n[指令]：请客观指出区内目前在该细分环节暂无匹配记录，并顺势提出向外招商引资或寻找技术平替的专业建议。切忌无中生有编造企业。`;
+                        }
+
+                        const msgs = State.aiSession.conversation.map(m=>({role:m.role,content:m.content})); 
+                        msgs.push({role:'user',content: q + hiddenContext}); 
+                        
+                        let acc = '';
+                        await AIEngine.fetchStream(msgs, (chunk) => {
+                            acc += chunk; document.getElementById(ldId)?.remove();
+                            let rpDiv = document.getElementById(replyBoxId);
+                            if (!rpDiv) { resDiv.insertAdjacentHTML('beforeend', `<div id="${replyBoxId}" class="mt-6 pt-5 border-t border-slate-200"></div>`); rpDiv = document.getElementById(replyBoxId); }
+                            rpDiv.innerHTML = `<div class="font-bold text-slate-800 mb-3 text-sm border-l-4 border-indigo-500 pl-3">深度交互：${q}</div>` + DOMPurify.sanitize(marked.parse(acc));
+                            resDiv.scrollTop = resDiv.scrollHeight;
+                        }, State.aiSession.abortController.signal);
+                        
+                        State.aiSession.conversation.push({role:'user',content: q + hiddenContext}, {role:'assistant',content:acc});
+                        await this.saveDraft(); 
+                        
+                        if(State.aiSession.currentReport) State.aiSession.currentReport.conversation = JSON.parse(JSON.stringify(State.aiSession.conversation));
+                        document.getElementById('suggestionButtons').innerHTML = '';
+
+                    } catch(e) {
+                        if (e.name !== 'AbortError') { document.getElementById(ldId)?.remove(); resDiv.insertAdjacentHTML('beforeend', `<div class="text-red-600 p-3 bg-red-50 rounded-xl mt-4 text-sm">❌ 追问异常：${e.message}</div>`); }
+                    } finally { btn.disabled = false; input.disabled = false; input.focus(); document.getElementById(ldId)?.remove(); State.aiSession.abortController = null; }
+                },
+
+                handleExportExcel() {
+                    if (!State.aiSession.targetData || State.aiSession.targetData.length === 0) return UI.showToast('缓存中暂无匹配支撑企业', 'warning');
+                    try {
+                        const exportData = State.aiSession.targetData.map((i, idx) => ({
+                            '推荐顺位': idx + 1, '企业名称': i.name, '所属产业': i.category, '核心业务': i.product, '详细介绍': i.description, '产能资质': i.capacity || '无', '系统加权等级': i.weight >= 10 ? '★ 核心资质梯队' : '标准配套梯队'
+                        }));
+                        const ws = XLSX.utils.json_to_sheet(exportData); const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, "智能推荐清单");
+                        XLSX.writeFile(wb, `西青产业通_生态架构推演名录_${new Date().getTime()}.xlsx`);
+                        UI.showToast('✅ 导出Excel台账成功', 'success');
+                    } catch(e) { UI.showToast('导出组件异常', 'error'); }
+                },
+
+                async handleSaveDict() {
+                    const txt = document.getElementById('dictInput').value; const newDict = {};
+                    txt.split('\n').forEach(line => {
+                        if (line.includes(':') || line.includes('：')) {
+                            const parts = line.split(/:|：/); const key = parts[0].trim();
+                            const vals = parts[1].split(/[、,，]/).map(v=>v.trim()).filter(v=>v);
+                            if (key && vals.length) newDict[key] = vals;
+                        }
+                    });
+                    if (Object.keys(newDict).length === 0) return UI.showToast('图谱格式非法或为空', 'error');
+                    State.localDict = newDict; await localforage.setItem(CONFIG.STORAGE.DICT_KEY, newDict);
+                    UI.showToast('✅ 自定义图谱加载成功，无需调用AI即可拦截', 'success'); UI.closeModal('dictConfigModal');
+                },
+                async handleResetDict() { if(confirm('确认恢复系统出厂图谱配置？')) { State.localDict = CONFIG.DEFAULT_DICT; await localforage.removeItem(CONFIG.STORAGE.DICT_KEY); UI.showDictModal(); UI.showToast('已重置回默认'); } },
+
+                async handleWordImport(e) { const f = e.target.files[0]; if(!f) return; try { document.getElementById('resultCount').innerText = "解析中..."; const r = new FileReader(); r.onload = async (ev) => { try { const nd = await DocParser.processWord(ev.target.result); this.mergeData(nd); } catch(err) { UI.showToast('文档结构破损', 'error'); this.handleSearch(); } }; r.readAsArrayBuffer(f); } catch(e) { UI.showToast('载入失败', 'error'); } },
+                async handleExcelImport(e) { const f = e.target.files[0]; if(!f) return; try { const r = new FileReader(); r.onload = async (ev) => { try { const nd = DocParser.processExcel(ev.target.result); this.mergeData(nd); } catch(err) { UI.showToast('不支持的表单结构', 'error'); } }; r.readAsArrayBuffer(f); } catch(e) { UI.showToast('读取受阻', 'error'); } },
+                async mergeData(newItems) { let added = 0; newItems.forEach(i => { if(!State.allData.find(x => x.name === i.name)){ State.allData.push(i); added++; } }); if (added > 0) { await localforage.setItem(CONFIG.STORAGE.DATA_KEY, State.allData); UI.showToast(`✅ 新增汇编 ${added} 家企业`, 'success'); this.handleSearch(); } else { UI.showToast('无有效新企业', 'warning'); this.handleSearch(); } },
+                async handleClearData() { if(confirm('⚠️ 确认清空所有缓存台账？')) { await localforage.removeItem(CONFIG.STORAGE.DATA_KEY); location.reload(); } },
+                handleSaveApiKey() { const k = document.getElementById('apiKeyInput').value.trim(); if(k){ State.apiKey=k; localStorage.setItem(CONFIG.STORAGE.API_KEY, k); UI.showToast('权限密钥已封存','success'); UI.closeModal('apiKeyModal'); } },
+                async handleSaveReport() { if(State.aiSession.currentReport){ try{ const h=(await localforage.getItem(CONFIG.STORAGE.HISTORY_KEY))||[]; h.unshift(State.aiSession.currentReport); await localforage.setItem(CONFIG.STORAGE.HISTORY_KEY, h); UI.showToast('档案固化成功', 'success'); document.getElementById('saveReportBtn').classList.add('hidden'); }catch(e){ UI.showToast('存储受限', 'error'); } } },
+                async handleDeleteHistory(id) { const h = (await localforage.getItem(CONFIG.STORAGE.HISTORY_KEY))||[]; await localforage.setItem(CONFIG.STORAGE.HISTORY_KEY, h.filter(x=>x.id!==id)); UI.showHistoryModal(); },
+                async handleViewHistory(id) { const h=(await localforage.getItem(CONFIG.STORAGE.HISTORY_KEY))||[]; const r=h.find(x=>x.id===id); if(!r)return; UI.closeModal('historyModal'); UI.openModal('aiMatchModal'); document.getElementById('aiMatchLoading').classList.add('hidden'); document.getElementById('aiMatchResult').classList.remove('hidden'); document.getElementById('aiMatchResult').innerHTML = DOMPurify.sanitize(marked.parse(r.conversation.filter(x=>x.role==='assistant').pop()?.content||'')); document.getElementById('exportExcelBtn').classList.add('hidden'); }, 
+                
+                showCompanyDetail(id) { const item = State.allData.find(x => x.id === id); if (item) UI.showCompanyDetail(item); },
+                copyBusinessCard(id) { const item = State.allData.find(x => x.id === id); if (!item) return; const text = `【企业雷达名片】${item.name}\n━━━━━━━━━━━━━━━━━━━━━━\n📍 所属产业：${item.category}\n📦 核心业务：${item.product}\n📖 详情简介：${item.description}\n🏅 资质产能：${item.capacity || '详见系统档案'}\n━━━━━━━━━━━━━━━━━━━━━━\n* 来源：西青产业通 *`; UI.copyToClipboard(text); }
+            };
+
+            global.XiqingApp = {
+                UI: UI,
+                init: () => AppController.init(), handleSearch: () => AppController.handleSearch(), setFilter: (c) => AppController.setFilter(c),
+                handleTriggerAI: (isResume) => AppController.handleTriggerAI(isResume), handleFollowUp: () => AppController.handleFollowUp(),
+                handleExportExcel: () => AppController.handleExportExcel(), handleSaveDict: () => AppController.handleSaveDict(), handleResetDict: () => AppController.handleResetDict(),
+                handleWordImport: (e) => AppController.handleWordImport(e), handleExcelImport: (e) => AppController.handleExcelImport(e), handleClearData: () => AppController.handleClearData(),
+                handleSaveApiKey: () => AppController.handleSaveApiKey(), handleSaveReport: () => AppController.handleSaveReport(), handleViewHistory: (id) => AppController.handleViewHistory(id), handleDeleteHistory: (id) => AppController.handleDeleteHistory(id),
+                showCompanyDetail: (id) => AppController.showCompanyDetail(id), copyBusinessCard: (id) => AppController.copyBusinessCard(id)
+            };
+        })(window);
+
+        document.addEventListener('DOMContentLoaded', () => window.XiqingApp.init());
+    </script>
+</body>
+</html>
