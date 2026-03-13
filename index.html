@@ -445,22 +445,50 @@
 
             /** [模块 5] AI 引擎通讯层 (AI Service) */
             const AIEngine = {
-                async fetchStream(messages, onChunk, signal) {
-                    if (!State.apiKey) throw new Error('未设置 API Key');
-                    const response = await fetch(CONFIG.AI.ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${State.apiKey}` }, body: JSON.stringify({ model: CONFIG.AI.MODEL, messages: messages, stream: true, temperature: CONFIG.AI.TEMP }), signal: signal });
-                    if (!response.ok) throw new Error(`API 服务异常 (${response.status})`);
-                    const reader = response.body.getReader(); const decoder = new TextDecoder('utf-8'); let buffer = '';
-                    while (true) {
-                        const { done, value } = await reader.read(); if (done) break;
-                        buffer += decoder.decode(value, { stream: true }); const lines = buffer.split('\n'); buffer = lines.pop() || '';
-                        for (const line of lines) {
-                            if (line.startsWith('data: ') && line.slice(6) !== '[DONE]') {
-                                try { const parsed = JSON.parse(line.slice(6)); const content = parsed.choices[0]?.delta?.content || ''; if (content) onChunk(content); } catch (e) {}
-                            }
-                        }
-                    }
+    async fetchStream(messages, onChunk, signal) {
+        // 不再需要前端传递 API Key，改为调用后端代理接口
+        const response = await fetch('/api/ai-proxy', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                messages: messages, 
+                stream: true, 
+                temperature: CONFIG.AI.TEMP 
+            }),
+            signal: signal
+        });
+
+        if (!response.ok) {
+            // 捕获后端返回的错误信息
+            const errData = await response.json().catch(() => ({ error: `API 服务异常 (${response.status})` }));
+            throw new Error(errData.error || `API 服务异常 (${response.status})`);
+        }
+
+        const reader = response.body.getReader(); 
+        const decoder = new TextDecoder('utf-8'); 
+        let buffer = '';
+        
+        while (true) {
+            const { done, value } = await reader.read(); 
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true }); 
+            const lines = buffer.split('\n'); 
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ') && line.slice(6) !== '[DONE]') {
+                    try { 
+                        const parsed = JSON.parse(line.slice(6)); 
+                        const content = parsed.choices[0]?.delta?.content || ''; 
+                        if (content) onChunk(content); 
+                    } catch (e) {}
                 }
-            };
+            }
+        }
+    }
+};
 
             /** [模块 6] 文档解析器 (Data Parser) */
             const DocParser = {
@@ -514,7 +542,7 @@
                 async handleTriggerAI(isResume = false) {
                     const query = document.getElementById('searchInput').value.trim();
                     if (!query && !isResume) return UI.showToast("请输入需要撮合的需求", "warning");
-                    if (!State.apiKey) return UI.showApiKeyModal();
+                    // if (!State.apiKey) return UI.showApiKeyModal();
 
                     this.abortAISession(); State.aiSession.abortController = new AbortController();
                     State.aiSession.startTime = Date.now(); State.aiSession.query = query;
@@ -751,4 +779,5 @@ ${JSON.stringify(ctxPayload)}
         document.addEventListener('DOMContentLoaded', () => window.XiqingApp.init());
     </script>
 </body>
+
 </html>
