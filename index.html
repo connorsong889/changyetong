@@ -15,7 +15,6 @@
             } 
         }
     </script>
-    <!-- 第三方依赖库 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.3/purify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
@@ -89,8 +88,9 @@
         .ai-btn-supply:hover { box-shadow: 0 12px 20px -5px var(--theme-btn-bg) !important; }
         .ai-btn-demand:hover { box-shadow: 0 12px 20px -5px rgba(5, 150, 105, 0.6) !important; }
 
-        button[onclick*="closeModal"]:hover { transform: rotate(90deg) scale(1.1) !important; box-shadow: none !important; }
-        button[onclick*="closeModal"]:active { transform: rotate(90deg) scale(0.9) !important; }
+        /* ====== 修复后的 CSS 选择器，只匹配含有 .rounded-full 的关闭按钮 ====== */
+        button[onclick*="closeModal"].rounded-full:hover { transform: rotate(90deg) scale(1.1) !important; box-shadow: none !important; }
+        button[onclick*="closeModal"].rounded-full:active { transform: rotate(90deg) scale(0.9) !important; }
 
         div[onclick*="handleLogoClick"], div[onclick*="setTheme"] { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
         div[onclick*="handleLogoClick"]:hover, div[onclick*="setTheme"]:hover { transform: scale(1.03) translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -173,7 +173,6 @@
 
     <div id="toast-container" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- 头部导航 -->
     <header class="theme-header text-white shadow-xl sticky top-0 z-50 border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
             <div class="flex items-center gap-3 w-full md:w-auto justify-between">
@@ -222,7 +221,6 @@
         </div>
     </header>
 
-    <!-- 搜索区 -->
     <div class="theme-search-bg pb-20 sm:pb-28 pt-6 sm:pt-8 shadow-inner relative overflow-hidden z-10">
         <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 32px 32px;"></div>
         <div class="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
@@ -230,7 +228,6 @@
                 <div class="pl-4 pr-2 text-white/60 hidden md:block">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-                <!-- 增加了防抖输入触发和自动适应高度的 textarea -->
                 <textarea id="searchInput" class="w-full px-4 py-3 text-sm sm:text-base focus:outline-none text-white bg-transparent placeholder-white/50 resize-none h-12 md:h-14 font-medium" placeholder="输入核心产品或技术名词，如 '减速机、工业机器人、碳纤维...'" 
                           oninput="this.style.height='';this.style.height=Math.min(this.scrollHeight, 100)+'px'; XiqingApp.handleSearchDebounced();"
                           onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); XiqingApp.handleSearch(); }"></textarea>
@@ -239,7 +236,6 @@
                     <button onclick="XiqingApp.handleSearch()" class="flex-1 md:flex-none bg-white/10 hover:bg-white/20 text-indigo-100 px-4 py-2 sm:py-3 rounded-xl font-semibold transition-colors text-sm whitespace-nowrap border border-white/20 backdrop-blur-sm">
                         🔍 精准扫库
                     </button>
-                    <!-- 双向赋能按钮 -->
                     <button onclick="XiqingApp.handleTriggerAI(false, 'supply')" class="flex-1 md:flex-none ai-btn-supply px-4 py-2 sm:py-3 rounded-xl font-bold text-sm whitespace-nowrap shadow-lg flex items-center justify-center gap-1.5" title="以采购方视角，寻找能提供该产品的源头工厂及配套">
                         📦 找供应(寻配套)
                     </button>
@@ -250,12 +246,10 @@
             </div>
             
             <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-4 sm:mt-6 justify-center sm:justify-start lg:justify-center" id="categoryFilters">
-                <!-- 动态分类按钮 -->
-            </div>
+                </div>
         </div>
     </div>
 
-    <!-- 主内容区 -->
     <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full -mt-6 sm:-mt-8 relative z-20">
         <div class="flex justify-between items-end mb-4 sm:mb-6 px-1 sm:px-2">
             <h2 class="text-base sm:text-lg font-extrabold text-slate-800 flex items-center gap-2">
@@ -268,10 +262,7 @@
         <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
     </main>
 
-    <!-- 主题配置中心、AI弹窗等组件 -->
-
     <div id="themeModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[80] backdrop-blur-md p-4">
-        <!-- 主题配置框内容保持不变 -->
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 flex flex-col">
             <div class="bg-slate-50 p-4 sm:p-5 border-b border-slate-200 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">🎨 系统视觉主题定制</h3>
@@ -303,7 +294,6 @@
         </div>
     </div>
 
-    <!-- AI 推演模态框 -->
     <div id="aiMatchModal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-[60] backdrop-blur-md p-2 sm:p-4">
         <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden border border-indigo-200/50">
             <div class="bg-gradient-to-r from-slate-50 to-indigo-50/50 p-4 sm:p-5 border-b border-indigo-100 flex justify-between items-center shrink-0">
@@ -336,7 +326,6 @@
             </div>
             
             <div class="border-t border-slate-200 bg-slate-50 shrink-0">
-                <!-- 优化升级版追问区（Pill-shape胶囊设计） -->
                 <div class="follow-up-area hidden" id="followUpArea">
                     <div class="suggestion-buttons" id="suggestionButtons"></div>
                     <div class="follow-up-input-area">
@@ -365,7 +354,6 @@
         </div>
     </div>
 
-    <!-- 图谱配置中心、历史库、API设置、企业详情弹窗保留原样 -->
     <div id="dictConfigModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[70] backdrop-blur-md p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
             <div class="bg-slate-50 p-4 sm:p-5 border-b border-slate-200 flex justify-between items-center">
@@ -420,7 +408,6 @@
         </div>
     </div>
 
-    <!-- 核心逻辑：MVC/模块化模式 + Web Worker -->
     <script>
         (function(global) {
             'use strict';
@@ -632,7 +619,8 @@
                     let bg = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-red-600' : type === 'warning' ? 'bg-amber-500' : 'bg-slate-800';
                     t.className = `toast-enter ${bg} text-white px-6 py-3 rounded-xl shadow-lg font-medium text-sm flex items-center gap-2 pointer-events-auto mx-4 border border-white/20`;
                     t.innerHTML = `<span>${msg}</span>`; c.appendChild(t);
-                    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-10px)'; t.style.transition = 'all 0.3s ease'; setTimeout(() => t.remove(), 300); }, 1200);
+                    // 【优化修复】根据最近操作历史，缩短 Toast 消失时间，由 1200ms 调整为 800ms，更加干脆美观
+                    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-10px)'; t.style.transition = 'all 0.3s ease'; setTimeout(() => t.remove(), 300); }, 800);
                 },
                 openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); },
                 closeModal(id) { 
@@ -945,8 +933,8 @@ ${JSON.stringify(ctxPayload)}
 ### 🎯 核心【${State.aiSession.mode === 'supply' ? '供应' : '需求'}】精准匹配研判
 （挑选最能直接解决其需求的适配企业，宁缺毋滥。
 ${State.aiSession.mode === 'supply' 
-  ? '优先推荐能直接生产、提供该产品或其核心零部件的源头供应商。**【高阶寻源技巧（顺藤摸瓜）】：如果名录中确实没有直接生产该产品的企业，请立刻转换思路，推荐“极大概率正在大量采购、使用该产品或类似产品”的区内下游企业！并在理由中明确建议：“区内虽无直接生产商，但可通过拜访该下游企业，挖掘其背后的现有（区外）供应商资源，从而打开对接和定向招商的突破口”。**' 
-  : '优先推荐极大概率需要采购该产品/服务作为原材料或生产工具的下游企业客户。**【高阶拓客技巧（借船出海）】：如果名录中暂无直接对口的完美客户，请立刻转换思路，推荐能与其形成配套集成的“行业集成商”或“生产服务商”，建议通过与他们组团打包，共同去开拓最终的下游大客户市场！**'}）
+  ? '优先推荐能直接生产、提供该产品或其核心零部件的源头供应商。**【高阶寻源技巧】：如果名录中确实没有直接生产该产品的企业，请立刻转换思路，推荐“极大概率正在大量采购、使用该产品或类似产品”的区内下游企业！并在理由中明确建议：“区内虽无直接生产商，但可通过拜访该下游企业，挖掘其背后的现有（区外）供应商资源，从而打开对接和定向招商的突破口”。**' 
+  : '优先推荐极大概率需要采购该产品/服务作为原材料或生产工具的下游企业客户。**【高阶拓客技巧】：如果名录中暂无直接对口的完美客户，请立刻转换思路，推荐能与其形成配套集成的“行业集成商”或“生产服务商”，建议通过与他们组团打包，共同去开拓最终的下游大客户市场！**'}）
 * **[企业名称]**（[梯队级别]）
   * **深度契合点**：(一针见血地指出名录中该企业的具体核心技术/业务。若采用上述“高阶技巧”，必须明确说明对接该企业能带来怎样的“顺藤摸瓜”或“借船出海”跨界价值)
 
