@@ -340,7 +340,7 @@
                 <div class="follow-up-area hidden" id="followUpArea">
                     <div class="suggestion-buttons" id="suggestionButtons"></div>
                     <div class="follow-up-input-area">
-                        <textarea id="followUpInput" class="follow-up-input" rows="1" placeholder="在此输入交互指令或战略需求..." 
+                        <textarea id="followUpInput" class="follow-up-input" rows="1" placeholder="在此输入交互指令..." 
                                   oninput="this.style.height='';this.style.height=this.scrollHeight+'px';"
                                   onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); XiqingApp.handleFollowUp(); }"></textarea>
                         <button id="followUpBtn" class="follow-up-btn shadow-sm" onclick="XiqingApp.handleFollowUp()">
